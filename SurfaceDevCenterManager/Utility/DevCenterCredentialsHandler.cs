@@ -23,6 +23,8 @@ namespace SurfaceDevCenterManager.Utility
 
         private static string GetCredential()
         {
+            throw new NotImplementedException();
+
             byte[] data = null;
             byte[] encryptData = null;
             string retval = null;
@@ -51,6 +53,8 @@ namespace SurfaceDevCenterManager.Utility
 
         private static bool SetCredential(string token)
         {
+            throw new NotImplementedException();
+
             byte[] data = Encoding.Unicode.GetBytes(token);
             byte[] encryptData = null;
             bool retval = false;
@@ -90,7 +94,7 @@ namespace SurfaceDevCenterManager.Utility
             List<AuthorizationHandlerCredentials> myCreds = null;
             if (CredentialsOption == null)
             {
-                CredentialsOption = "AADThenFile";
+                CredentialsOption = "FileOnly";
             }
             CredentialsOption = CredentialsOption.ToLowerInvariant();
 
@@ -152,7 +156,7 @@ namespace SurfaceDevCenterManager.Utility
             {
                 try
                 {
-                    string authconfig = System.IO.File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\authconfig.json");
+                    string authconfig = System.IO.File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "authconfig.json"));
                     myCreds = JsonConvert.DeserializeObject<List<AuthorizationHandlerCredentials>>(authconfig);
                     if (myCreds.Count == 0)
                     {
@@ -179,7 +183,7 @@ namespace SurfaceDevCenterManager.Utility
                 {
                     try
                     {
-                        string authconfig = System.IO.File.ReadAllText(AppDomain.CurrentDomain.BaseDirectory + "\\authconfig.json");
+                        string authconfig = System.IO.File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "authconfig.json"));
                         myCreds = JsonConvert.DeserializeObject<List<AuthorizationHandlerCredentials>>(authconfig);
                         if (myCreds.Count == 0)
                         {
@@ -205,6 +209,8 @@ namespace SurfaceDevCenterManager.Utility
 
         private static async Task<List<AuthorizationHandlerCredentials>> GetWebApiCreds(string AADAuthenticationOption)
         {
+            throw new NotImplementedException();
+
             List<AuthorizationHandlerCredentials> ReturnList = null;
 
             string url = ConfigurationManager.AppSettings["url"];
@@ -227,23 +233,23 @@ namespace SurfaceDevCenterManager.Utility
                 AADAuthenticationOption = "never";
             }
             AADAuthenticationOption = AADAuthenticationOption.ToLowerInvariant();
-            PlatformParameters platformParams = new PlatformParameters(PromptBehavior.Never);
+            PlatformParameters platformParams = null; // new PlatformParameters(PromptBehavior.Never);
 
             if (AADAuthenticationOption.CompareTo("prompt") == 0)
             {
-                platformParams = new PlatformParameters(PromptBehavior.Auto);
+               // platformParams = new PlatformParameters(PromptBehavior.Auto);
             }
             else if (AADAuthenticationOption.CompareTo("always") == 0)
             {
-                platformParams = new PlatformParameters(PromptBehavior.Always);
+               // platformParams = new PlatformParameters(PromptBehavior.Always);
             }
             else if (AADAuthenticationOption.CompareTo("refreshsession") == 0)
             {
-                platformParams = new PlatformParameters(PromptBehavior.RefreshSession);
+               // platformParams = new PlatformParameters(PromptBehavior.RefreshSession);
             }
             else if (AADAuthenticationOption.CompareTo("selectaccount") == 0)
             {
-                platformParams = new PlatformParameters(PromptBehavior.SelectAccount);
+               // platformParams = new PlatformParameters(PromptBehavior.SelectAccount);
             }
 
             AuthenticationResult authResult = null;
@@ -279,7 +285,7 @@ namespace SurfaceDevCenterManager.Utility
                 {
                     try
                     {
-                        authResult = await authContext.AcquireTokenAsync(resource, clientID, redirectUri, new PlatformParameters(PromptBehavior.Auto));
+                        //authResult = await authContext.AcquireTokenAsync(resource, clientID, redirectUri, new PlatformParameters(PromptBehavior.Auto));
                         AccessTokenType = authResult.AccessTokenType;
                         AccessToken = authResult.AccessToken;
                     }
