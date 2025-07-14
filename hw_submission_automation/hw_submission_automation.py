@@ -11,10 +11,10 @@ Options:
                                     'mixed': For Win10 packages containing both x86/x64
   -g ..., --guest_names             parse specified guest platform. Valid value:
 
-                                    x86: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10.all, 11.all, 10.latest
+                                    x86: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10.all, 10.latest
                                     x64: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 16, 19, 22,
                                     25, 10.all, 11.all, 10.latest, 11.latest
-                                    ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 22, 25, 10.latest, 11.latest
+                                    ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 22, 25, 10.all, 11.all, 10.latest, 11.latest
                                     Examples:
                                     11.latest
                                     10_1803,10_2004
@@ -368,8 +368,8 @@ def gen_guest_mapping():
     }
 
     # TODO: Special cases for QE and Build system usage
-    # Add the "10" option for x86 and x64 with combined signatures of Windows 10 versions
-    for arch in ["x86", "x64"]:
+    # Add the "10" option for x86, x64 and ARM64 with combined signatures of Windows 10 versions
+    for arch in ["x86", "x64", "ARM64"]:
         mapping[arch]["10.all"] = []
         for key in mapping[arch].keys():
             if re.match('^10_.*', key):
@@ -377,8 +377,8 @@ def gen_guest_mapping():
                 mapping[arch]["10.all"].append(mapping[arch][key])
         mapping[arch]["10.all"] = list(itertools.chain.from_iterable(mapping[arch]["10.all"]))
 
-    # Add the "11" option for x86 and x64 with combined signatures of Windows 11 versions
-    for arch in ["x86", "x64"]:
+    # Add the "11" option for x64 and ARM64 with combined signatures of Windows 11 versions
+    for arch in ["x64", "ARM64"]:
         mapping[arch]["11.all"] = []
         for key in mapping[arch].keys():
             if re.match('^11_.*', key):
