@@ -111,7 +111,7 @@ class SDCMWrapper:
             )
             # Check if the return code is 0 (SUCCESS)
             if result.returncode != 0:
-                raise RuntimeError(f"SDCM execution failed (code={result.returncode}): {result.stderr}")
+                raise RuntimeError(f"SDCM execution failed (code={result.returncode}): {result.stdout} {result.stderr}")
         except subprocess.TimeoutExpired:
             pass
 
@@ -163,13 +163,18 @@ class SDCMWrapper:
                 encoding="utf-8",
             )
             output = result.stdout.strip()
-            print(f"SDCM output:\n{output}")
+            error = result.stderr.strip()
+            if output:
+                print(f"SDCM output:\n{output}")
+            if error:
+                print(f"SDCM warnings/errors:\n{error}")
             return output
         except subprocess.CalledProcessError as e:
             error_msg = (
                 f"SDCM command failed with code {e.returncode}:\n"
                 f"Command: {' '.join(command)}\n"
-                f"Error output: {e.stderr.strip()}"
+                f"Stdout output: {e.output.strip()}"
+                f"Stderr output: {e.stderr.strip()}"
             )
             raise RuntimeError(error_msg) from e
 
@@ -529,4 +534,3 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
-
