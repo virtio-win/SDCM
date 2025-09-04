@@ -28,7 +28,7 @@ Examples:
   python3 hw_submission_automation.py -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
 """
 
-import getopt
+import argparse
 import json
 import os
 import re
@@ -324,8 +324,48 @@ def format_date_to_iso(date_str):
     return datetime.strptime(date_str, "%Y-%m-%d").isoformat()
 
 
-def usage():
-    print(__doc__)
+def parse_arguments():
+    """Parse command line arguments using argparse"""
+    parser = argparse.ArgumentParser(
+        description="Hardware submission automation tool for SDCM",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__
+    )
+    parser.add_argument(
+        "-t", "--test_harness",
+        default="HLK",
+        help="parse test_harness, valid value: HLK(default),Attestation"
+    )
+    parser.add_argument(
+        "-n", "--product_name",
+        required=True,
+        help="parse product name, eg: 'Red Hat VirtIO RNG Drivers for Windows 11'"
+    )
+    parser.add_argument(
+        "-a", "--guest_arch",
+        default="x64",
+        help="parse specified guest architecture. Valid value: x86,x64(default),mixed,ARM64"
+    )
+    parser.add_argument(
+        "-g", "--guest_names",
+        required=True,
+        help="parse specified guest platform"
+    )
+    parser.add_argument(
+        "-s", "--submission_name",
+        help="parse submission name, default value is the same with product_name"
+    )
+    parser.add_argument(
+        "-p", "--package_path",
+        required=True,
+        help="parse package file path eg: /home/271_RNG_win11_unsigned.hlkx"
+    )
+    parser.add_argument(
+        "-d", "--announcement_date",
+        default="2025-01-01",
+        help="Parse announcement date (GA) in YYYY-MM-DD format (e.g., 2025-06-24)"
+    )
+    return parser.parse_args()
 
 
 def gen_guest_mapping():
@@ -402,54 +442,11 @@ def gen_guest_mapping():
     return mapping
 
 
-def main(argv):
-    test_harness = "HLK"
-    product_name = None
-    guest_names = []
-    guest_arch = "x64"
-    submission_name = None
-    package_path = None
-    announcement_date = "2025-01-01"
+def main():
+    # Parse command line arguments
+    args = parse_arguments()
+    
     marketing_names = []
-    try:
-        opts, args = getopt.getopt(
-            argv,
-            "ht:n:g:a:s:p:d:",
-            [
-                "help",
-                "test_harness=",
-                "product_name=",
-                "guest_names=",
-                "guest_arch=",
-                "submission_name=",
-                "package_path=",
-                "announcement_date=",
-            ],
-        )
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
-
-    for opt, arg in opts:
-        print(arg)
-        print(opt)
-        if opt in ("-h", "--help"):
-            usage()
-            sys.exit()
-        elif opt in ("-t", "--test_harness"):
-            test_harness = arg
-        elif opt in ("-n", "--product_name"):
-            product_name = arg
-        elif opt in ("-g", "--guest_names"):
-            guest_names = arg
-        elif opt in ("-a", "--guest_arch"):
-            guest_arch = arg
-        elif opt in ("-s", "--submission_name"):
-            submission_name = arg
-        elif opt in ("-p", "--package_path"):
-            package_path = arg
-        elif opt in ("-d", "--announcement_date"):
-            announcement_date = arg
 
     guest_mapping = gen_guest_mapping()
 
@@ -460,11 +457,11 @@ def main(argv):
     requested_signatures = []
     selected_product_types = []
 
-    for guest_name in guest_names.split(","):
-        if guest_arch == "mixed":
+    for guest_name in args.guest_names.split(","):
+        if args.guest_arch == "mixed":
             arch_list = ["x86", "x64"]
         else:
-            arch_list = [guest_arch]
+            arch_list = [args.guest_arch]
         for arch in arch_list:
             current_mappings = guest_mapping[arch][guest_name]
             for mapping in current_mappings:
@@ -474,43 +471,44 @@ def main(argv):
     requested_signatures = list(set(requested_signatures))
     selected_product_types = list(set(selected_product_types))
 
+    submission_name = args.submission_name
     if not submission_name:
-        print(f"Submission name is not specified, using product name: {product_name}")
-        submission_name = product_name
+        print(f"Submission name is not specified, using product name: {args.product_name}")
+        submission_name = args.product_name
 
-    marketing_names = [product_name]
+    marketing_names = [args.product_name]
 
-    if test_harness == "Attestation":
+    if args.test_harness == "Attestation":
         marketing_names = []
         selected_product_types = []
         print("Attestation test harness selected, no marketing names or product types will be set.")
 
     # we always keep these three value the same when submit manually.
-    announcement_date = format_date_to_iso(announcement_date)
+    announcement_date = format_date_to_iso(args.announcement_date)
 
     print("SDCM product creation parameters:")
-    print(f" Test harness: {test_harness}")
-    print(f" Product name: {product_name}")
-    print(f" Guest names: {guest_names}")
-    print(f" Guest architecture: {guest_arch}")
+    print(f" Test harness: {args.test_harness}")
+    print(f" Product name: {args.product_name}")
+    print(f" Guest names: {args.guest_names}")
+    print(f" Guest architecture: {args.guest_arch}")
     print(f"   - Requested signatures: {requested_signatures}")
     print(f"   - Selected product types: {selected_product_types}")
-    print(f" Package path: {package_path}")
+    print(f" Package path: {args.package_path}")
     print(f" Announcement date: {announcement_date}")
     print(f" Submission name: {submission_name}")
     print(f" Marketing names: {marketing_names}")
 
     wrapper = SDCMWrapper()
     pid = wrapper.create_product(
-        product_name,
-        test_harness,
+        args.product_name,
+        args.test_harness,
         announcement_date,
         marketing_names,
         selected_product_types,
         requested_signatures,
     )
     if not pid:
-        print(f"Failed to create product: {product_name}")
+        print(f"Failed to create product: {args.product_name}")
         sys.exit(1)
 
     sid = wrapper.create_submission(pid, submission_name)
@@ -518,19 +516,19 @@ def main(argv):
         print(f"Failed to create submission: {submission_name}")
         sys.exit(1)
 
-    wrapper.upload_package(package_path, pid, sid)
+    wrapper.upload_package(args.package_path, pid, sid)
     wrapper.commit_submission(pid, sid)
 
     create_results = {
         "product_id": pid,
         "submission_id": sid,
-        "product_name": product_name,
+        "product_name": args.product_name,
         "submission_name": submission_name,
     }
-    create_results_file = slugify(f"Result_Product_{(product_name)}.json")
+    create_results_file = slugify(f"Result_Product_{args.product_name}.json")
     with open(create_results_file, "w") as f:
         json.dump(create_results, f, indent=4)
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
