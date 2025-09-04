@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 """
-Usage: python3 hw_submission_automation.py [options] [string...]
+Usage: python3 hw_submission_automation.py [options] [action]
+
+Actions:
+  submit (default)                 Submit a hardware package for certification
+  download                         Download submission results (not yet implemented)
 
 Options:
   -h, --help                        show this help message
@@ -26,6 +30,7 @@ Options:
 
 Examples:
   python3 hw_submission_automation.py -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
+  python3 hw_submission_automation.py submit -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
 """
 
 import argparse
@@ -338,7 +343,6 @@ def parse_arguments():
     )
     parser.add_argument(
         "-n", "--product_name",
-        required=True,
         help="parse product name, eg: 'Red Hat VirtIO RNG Drivers for Windows 11'"
     )
     parser.add_argument(
@@ -348,7 +352,6 @@ def parse_arguments():
     )
     parser.add_argument(
         "-g", "--guest_names",
-        required=True,
         help="parse specified guest platform"
     )
     parser.add_argument(
@@ -357,13 +360,19 @@ def parse_arguments():
     )
     parser.add_argument(
         "-p", "--package_path",
-        required=True,
         help="parse package file path eg: /home/271_RNG_win11_unsigned.hlkx"
     )
     parser.add_argument(
         "-d", "--announcement_date",
         default="2025-01-01",
         help="Parse announcement date (GA) in YYYY-MM-DD format (e.g., 2025-06-24)"
+    )
+    parser.add_argument(
+        "action",
+        nargs="?",
+        default="submit",
+        choices=["submit", "download"],
+        help="Action to perform: submit (default) or download"
     )
     return parser.parse_args()
 
@@ -442,10 +451,18 @@ def gen_guest_mapping():
     return mapping
 
 
-def main():
-    # Parse command line arguments
-    args = parse_arguments()
-    
+def main_submit(args):
+    # Validate required arguments for submit action
+    if not args.product_name:
+        print("Error: --product_name is required for submit action")
+        sys.exit(1)
+    if not args.guest_names:
+        print("Error: --guest_names is required for submit action")
+        sys.exit(1)
+    if not args.package_path:
+        print("Error: --package_path is required for submit action")
+        sys.exit(1)
+
     marketing_names = []
 
     guest_mapping = gen_guest_mapping()
@@ -530,5 +547,23 @@ def main():
         json.dump(create_results, f, indent=4)
 
 
+def main_download(args):
+    print(f"[INFO] Download action selected")
+    print(f"[INFO] This feature is not yet implemented")
+
+
 if __name__ == "__main__":
-    main()
+    # Parse command line arguments
+    args = parse_arguments()
+
+    # Check that action is supported
+    if args.action not in ["submit", "download"]:
+        print(f"Error: Unsupported action '{args.action}'")
+        print("Supported actions: submit, download")
+        sys.exit(1)
+
+    # Call appropriate main function based on action
+    if args.action == "submit":
+        main_submit(args)
+    elif args.action == "download":
+        main_download(args)
