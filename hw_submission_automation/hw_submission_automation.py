@@ -178,7 +178,7 @@ class SDCMWrapper:
             error_msg = (
                 f"SDCM command failed with code {e.returncode}:\n"
                 f"Command: {' '.join(command)}\n"
-                f"Stdout output: {e.output.strip()}"
+                f"Stdout output: {e.output.strip()}\n"
                 f"Stderr output: {e.stderr.strip()}"
             )
             raise RuntimeError(error_msg) from e
