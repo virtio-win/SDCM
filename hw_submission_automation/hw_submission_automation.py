@@ -5,7 +5,7 @@ Usage: python3 hw_submission_automation.py [options] [action]
 
 Actions:
   submit (default)                 Submit a hardware package for certification
-  download                         Download submission results (not yet implemented)
+  wait_download                    Download submission results
 
 Options:
   -h, --help                        show this help message
@@ -311,6 +311,19 @@ class SDCMWrapper:
             ]
         )
 
+    def download_metadata(self, product_id: str, submission_id: str, output_file: str) -> str:
+        """Download submission metadata"""
+        return self._run_sdcm(
+            [
+                "--metadata",
+                output_file,
+                "--productid",
+                product_id,
+                "--submissionid",
+                submission_id,
+            ]
+        )
+
     def list_products(self) -> str:
         """List all products"""
         return self._run_sdcm(["--list", "product"])
@@ -371,8 +384,23 @@ def parse_arguments():
         "action",
         nargs="?",
         default="submit",
-        choices=["submit", "download"],
-        help="Action to perform: submit (default) or download"
+        choices=["submit", "wait_download"],
+        help="Action to perform: submit (default) or wait_download"
+    )
+
+    parser.add_argument(
+        "-pid", "--product_id",
+        help="Parse product ID"
+    )
+
+    parser.add_argument(
+        "-sid", "--submission_id",
+        help="Parse submission ID"
+    )
+
+    parser.add_argument(
+        "-o", "--output_file",
+        help="Parse output file path (e.g., /path/to/file.signed.zip)"
     )
     return parser.parse_args()
 
@@ -547,9 +575,33 @@ def main_submit(args):
         json.dump(create_results, f, indent=4)
 
 
-def main_download(args):
+def main_wait_download(args):
     print(f"[INFO] Download action selected")
-    print(f"[INFO] This feature is not yet implemented")
+
+    if not args.product_id:
+        print("Error: --product_id is required for download action")
+        sys.exit(1)
+    if not args.submission_id:
+        print("Error: --submission_id is required for download action")
+        sys.exit(1)
+    if not args.output_file:
+        print("Error: --output_file is required for download action")
+        sys.exit(1)
+
+    output_file = os.path.abspath(args.output_file)
+
+    wrapper = SDCMWrapper()
+    print(f"Waiting for submission with product ID: {args.product_id} and submission ID: {args.submission_id}")
+    results = wrapper.wait_for_submission(args.product_id, args.submission_id)
+    print(f"Submission completed")
+
+    wrapper.download_results(args.product_id, args.submission_id, output_file)
+    print(f"Results downloaded to: {output_file}")
+
+    if "> driverMetadata Url" in results:
+        print(f"Driver metadata URL found in submission results")
+        metadata_file = output_file + "_metadata.json"
+        wrapper.download_metadata(args.product_id, args.submission_id, metadata_file)
 
 
 if __name__ == "__main__":
@@ -557,13 +609,13 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     # Check that action is supported
-    if args.action not in ["submit", "download"]:
+    if args.action not in ["submit", "wait_download"]:
         print(f"Error: Unsupported action '{args.action}'")
-        print("Supported actions: submit, download")
+        print("Supported actions: submit, wait_download")
         sys.exit(1)
 
     # Call appropriate main function based on action
     if args.action == "submit":
         main_submit(args)
-    elif args.action == "download":
-        main_download(args)
+    elif args.action == "wait_download":
+        main_wait_download(args)
