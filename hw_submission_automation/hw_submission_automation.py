@@ -1,33 +1,6 @@
 #!/usr/bin/env python3
 
 """
-Usage: python3 hw_submission_automation.py [options] [action]
-
-Actions:
-  submit (default)                 Submit a hardware package for certification
-  wait_download                    Download submission results
-
-Options:
-  -h, --help                        show this help message
-  -t ..., --test_harness            parse test_harness, valid value: HLK(default),Attestation
-  -n ..., --product_name            parse product name, eg: "Red Hat VirtIO RNG Drivers for Windows 11"
-  -a ..., --guest_arch              parse specified guest archtechure. Valid value: x86,x64(default),mixed,ARM64
-                                    'mixed': For Win10 packages containing both x86/x64
-  -g ..., --guest_names             parse specified guest platform. Valid value:
-
-                                    x86: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10.all, 10.latest
-                                    x64: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 16, 19, 22,
-                                    25, 10.all, 11.all, 10.latest, 11.latest
-                                    ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 22, 25, 10.all, 11.all, 10.latest, 11.latest
-                                    Examples:
-                                    11.latest
-                                    10_1803,10_2004
-                                    10.all
-
-  -s ..., --submission_name         parse submission name, default value is the same with product_name
-  -p ..., --package_path            parse package file path eg: /home/271_RNG_win11_unsigned.hlkx
-  -d ..., --announcement_date       Parse announcement date (GA) in YYYY-MM-DD format (e.g., 2025-06-24)
-
 Examples:
   python3 hw_submission_automation.py -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
   python3 hw_submission_automation.py submit -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
@@ -365,7 +338,17 @@ def parse_arguments():
     )
     parser.add_argument(
         "-g", "--guest_names",
-        help="parse specified guest platform"
+        help="""
+        parse specified guest platform.
+        Valid value:
+         x86: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10.all, 10.latest
+         x64: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 16, 19, 22,
+            25, 10.all, 11.all, 10.latest, 11.latest
+         ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 22, 25, 10.all, 11.all, 10.latest, 11.latest
+         Examples:
+          11.latest
+          10_1803,10_2004
+          10.all"""
     )
     parser.add_argument(
         "-s", "--submission_name",
