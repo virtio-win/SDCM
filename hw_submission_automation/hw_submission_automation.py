@@ -4,6 +4,7 @@
 Examples:
   python3 hw_submission_automation.py -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
   python3 hw_submission_automation.py submit -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
+  python3 hw_submission_automation.py wait_download --input_json result_product_test_blk.json --output_file /path/to/file.signed.zip
 """
 
 import argparse
@@ -385,6 +386,14 @@ def parse_arguments():
         "-o", "--output_file",
         help="Parse output file path (e.g., /path/to/file.signed.zip)"
     )
+
+    parser.add_argument(
+        "-ij", "--input_json",
+        help="""
+        Parse arguments from input JSON file (e.g., /path/to/file.json that may contain product_id, submission_id, output_file).
+        Submit action will generate result_product_*.json with product_id and submission_id.
+        """
+    )
     return parser.parse_args()
 
 
@@ -561,15 +570,34 @@ def main_submit(args):
 def main_wait_download(args):
     print(f"[INFO] Download action selected")
 
+    input_json_data = None
+    if args.input_json:
+        try:
+            with open(args.input_json, "r") as f:
+                input_json_data = json.load(f)
+            print(f"[INFO] Loaded input JSON data from {args.input_json}")
+        except Exception as e:
+            print(f"Error: Failed to load input JSON file '{args.input_json}': {e}")
+            sys.exit(1)
+
     if not args.product_id:
-        print("Error: --product_id is required for download action")
-        sys.exit(1)
+        if input_json_data and "product_id" in input_json_data:
+            args.product_id = input_json_data["product_id"]
+        else:
+            print("Error: --product_id is required for download action")
+            sys.exit(1)
     if not args.submission_id:
-        print("Error: --submission_id is required for download action")
-        sys.exit(1)
+        if input_json_data and "submission_id" in input_json_data:
+            args.submission_id = input_json_data["submission_id"]
+        else:
+            print("Error: --submission_id is required for download action")
+            sys.exit(1)
     if not args.output_file:
-        print("Error: --output_file is required for download action")
-        sys.exit(1)
+        if input_json_data and "output_file" in input_json_data:
+            args.output_file = input_json_data["output_file"]
+        else:
+            print("Error: --output_file is required for download action")
+            sys.exit(1)
 
     output_file = os.path.abspath(args.output_file)
 
