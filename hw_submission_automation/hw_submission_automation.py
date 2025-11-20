@@ -599,7 +599,9 @@ def main_wait_download(args):
             print("Error: --output_file is required for download action")
             sys.exit(1)
 
-    output_file = os.path.abspath(args.output_file)
+    # output_file = os.path.abspath(args.output_file)
+    # if script is running in Cygwin environment, os.path.abspath will broke Windows path
+    output_file = args.output_file
 
     wrapper = SDCMWrapper()
     print(f"Waiting for submission with product ID: {args.product_id} and submission ID: {args.submission_id}")
