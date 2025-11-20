@@ -5,6 +5,8 @@ Examples:
   python3 hw_submission_automation.py -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
   python3 hw_submission_automation.py submit -n test_rng -g 11.latest -p /home/271_RNG_win11_unsigned.hlkx -d 2025-06-24
   python3 hw_submission_automation.py wait_download --input_json result_product_test_blk.json --output_file /path/to/file.signed.zip
+  python3 hw_submission_automation.py submission_info --input_json result_product_test_blk.json --output_file /path/to/submission_info.json
+  python3 hw_submission_automation.py submission_info --product_id=13791770662366887 --submission_id=1152921505700160123
 """
 
 import argparse
@@ -272,6 +274,10 @@ class SDCMWrapper:
         """Wait for submission completion"""
         return self._run_sdcm(["--wait", "--productid", product_id, "--submissionid", submission_id])
 
+    def submission_info(self, product_id: str, submission_id: str) -> str:
+        """Get submission info"""
+        return self._run_sdcm(["--list=submission", "--productid", product_id, "--submissionid", submission_id])
+
     def download_results(self, product_id: str, submission_id: str, output_file: str) -> str:
         """Download submission results"""
         return self._run_sdcm(
@@ -368,8 +374,8 @@ def parse_arguments():
         "action",
         nargs="?",
         default="submit",
-        choices=["submit", "wait_download"],
-        help="Action to perform: submit (default) or wait_download"
+        choices=["submit", "wait_download", "submission_info"],
+        help="Action to perform: submit (default), wait_download, submission_info"
     )
 
     parser.add_argument(
@@ -616,15 +622,70 @@ def main_wait_download(args):
         metadata_file = output_file + "_metadata.json"
         wrapper.download_metadata(args.product_id, args.submission_id, metadata_file)
 
+def main_submission_info(args):
+    print(f"[INFO] Submission info action selected")
+
+    input_json_data = None
+    if args.input_json:
+        try:
+            with open(args.input_json, "r") as f:
+                input_json_data = json.load(f)
+            print(f"[INFO] Loaded input JSON data from {args.input_json}")
+        except Exception as e:
+            print(f"Error: Failed to load input JSON file '{args.input_json}': {e}")
+            sys.exit(1)
+
+    if not args.product_id:
+        if input_json_data and "product_id" in input_json_data:
+            args.product_id = input_json_data["product_id"]
+        else:
+            print("Error: --product_id is required for submission_info action")
+            sys.exit(1)
+    if not args.submission_id:
+        if input_json_data and "submission_id" in input_json_data:
+            args.submission_id = input_json_data["submission_id"]
+        else:
+            print("Error: --submission_id is required for submission_info action")
+            sys.exit(1)
+    if not args.output_file:
+        if input_json_data and "output_file" in input_json_data:
+            args.output_file = input_json_data["output_file"]
+
+
+    wrapper = SDCMWrapper()
+    print(f"Getting information for submission with product ID: {args.product_id} and submission ID: {args.submission_id}")
+    text_info = wrapper.submission_info(args.product_id, args.submission_id)
+    print(f"Submission info retrieved")
+
+    results = {
+        "product_id": args.product_id,
+        "submission_id": args.submission_id,
+    }
+    # Simple parsing to find product ID from output, might need adjustment depending on output format
+    parsing_rules = [
+            ("commit_status", r"\s*commitStatus:\s*(\S+)"),
+            ("name", r"\s*Name:\s*(\S+.*)"),
+            ("type", r"\s*type:\s*(\S+)"),
+            ("step", r"\s*> Step:\s*(\S+)"),
+            ("state", r"\s*> State:\s*(\S+)"),
+        ]
+    for key, pattern in parsing_rules:
+        match = re.search(pattern, text_info)
+        if match:
+            results[key] = match.group(1)
+
+    info_file = args.output_file or slugify(f"Submission_Info_{args.product_id}_{args.submission_id}.json")
+    with open(info_file, "w") as f:
+        json.dump(results, f, indent=4)
 
 if __name__ == "__main__":
     # Parse command line arguments
     args = parse_arguments()
 
     # Check that action is supported
-    if args.action not in ["submit", "wait_download"]:
+    if args.action not in ["submit", "submission_info", "wait_download"]:
         print(f"Error: Unsupported action '{args.action}'")
-        print("Supported actions: submit, wait_download")
+        print("Supported actions: submit, submission_info, wait_download")
         sys.exit(1)
 
     # Call appropriate main function based on action
@@ -632,3 +693,5 @@ if __name__ == "__main__":
         main_submit(args)
     elif args.action == "wait_download":
         main_wait_download(args)
+    elif args.action == "submission_info":
+        main_submission_info(args)
