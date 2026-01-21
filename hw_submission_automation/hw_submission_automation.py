@@ -349,9 +349,10 @@ def parse_arguments():
         parse specified guest platform.
         Valid value:
          x86: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10.all, 10.latest
-         x64: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 16, 19, 22,
-            25, 10.all, 11.all, 10.latest, 11.latest
-         ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 22, 25, 10.all, 11.all, 10.latest, 11.latest
+         x64: 10_1511, 10_1607, 10_1703, 10_1709, 10_1803, 10_1809, 10_19H1, 10_2004, 10_21H2,
+            11_22H2, 11_24H2, 11_25H2, 16, 19, 22, 25, 10.all, 11.all, 10.latest, 11.latest
+         ARM64: 10_1709, 10_1803, 10_19H1, 10_2004, 10_21H2, 11_22H2, 11_24H2, 11_25H2,
+            22, 25, 10.all, 11.all, 10.latest, 11.latest
          Examples:
           11.latest
           10_1803,10_2004
@@ -428,6 +429,7 @@ def gen_guest_mapping():
             "10_21H2": [("WINDOWS_v100_X64_CO_FULL", "Windows_v100_CO")],
             "11_22H2": [("WINDOWS_v100_X64_NI_FULL", "Windows_v100_NI")],
             "11_24H2": [("WINDOWS_v100_X64_GE_FULL", "Windows_v100_GE")],
+            "11_25H2": [("WINDOWS_v100_X64_25H2_FULL", "Windows_v100_25H2")],
             "16": [("WINDOWS_v100_SERVER_X64_RS1_FULL", "Windows_v100Server_RS1")],
             "19": [("WINDOWS_v100_SERVER_X64_RS5_FULL", "Windows_v100Server_RS5")],
             "22": [("WINDOWS_v100_SERVER_X64_FE_FULL", "Windows_v100Server_FE")],
@@ -442,6 +444,7 @@ def gen_guest_mapping():
             "10_21H2": [("WINDOWS_v100_ARM64_CO_FULL", "Windows_v100_CO")],
             "11_22H2": [("WINDOWS_v100_ARM64_NI_FULL", "Windows_v100_NI")],
             "11_24H2": [("WINDOWS_v100_ARM64_GE_FULL", "Windows_v100_GE")],
+            "11_25H2": [("WINDOWS_v100_ARM64_25H2_FULL", "Windows_v100_25H2")],
             "22": [("WINDOWS_v100_SERVER_ARM64_FE_FULL", "Windows_v100Server_FE")],
             "25": [("WINDOWS_v100_SERVER_ARM64_GE_FULL", "Windows_v100Server_GE")],
         },
@@ -471,8 +474,8 @@ def gen_guest_mapping():
     mapping["x64"]["10.latest"] = mapping["x64"]["10_21H2"]
     mapping["ARM64"]["10.latest"] = mapping["ARM64"]["10_21H2"]
 
-    mapping["x64"]["11.latest"] = mapping["x64"]["11_24H2"]
-    mapping["ARM64"]["11.latest"] = mapping["ARM64"]["11_24H2"]
+    mapping["x64"]["11.latest"] = mapping["x64"]["11_25H2"]
+    mapping["ARM64"]["11.latest"] = mapping["ARM64"]["11_25H2"]
 
     return mapping
 
